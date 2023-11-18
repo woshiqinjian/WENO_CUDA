@@ -1,0 +1,68 @@
+module cuda_parallel
+
+    use cudafor
+
+    implicit none
+
+    contains
+
+!> universial error check subroutine
+    subroutine check(code_statue)
+    
+        integer,intent(in) :: code_statue
+        character(len=100) :: error_string
+    
+        if (error_code /=cudaSuccess) then
+            error_string=cudaGetErrorString (code_statue)
+            print *, "CUDA ERROR: "
+            print *, "      File:          " , __FILE__
+            print *, "      Line:          " , __LINE__
+            print *,"       Error Code:    " , trim(error_code)
+            print *, "      Error Text:    " , trim(error_string)
+            stop
+        end if
+    
+    end subroutine check
+    
+!> cuda initialization subroutine
+    subroutine initialize_cuda
+
+        integer :: device_count, device, ierr
+
+        ! Get the number of CUDA devices
+        ierr=cudaGetDeviceCount(device_count)
+        call check(ierr)
+
+        ! Loop over devices and set the first one that is available
+        do device = 0, device_count - 1
+            ierr = cudaSetDevice(device)
+            if (ierr == cudaSuccess) then
+                exit
+            else 
+                call check(ierr)
+            end if
+        end do
+    end subroutine initialize_cuda
+ 
+!> cuda finalization subroutine
+    subroutine finalize_cuda
+
+        integer :: ierr
+
+        ierr = cudaDeviceReset()
+        call check(ierr)
+
+    end subroutine finalize_cuda
+
+!> cuda abort subroutine
+    subroutine abort_cuda(Message)
+
+        character(len=*), intent(in) :: Message
+
+        print *, Message
+        call finalize_cuda()
+        stop
+
+    end subroutine abort_cuda
+
+end module cuda_initialization  

@@ -1,0 +1,107 @@
+3                                        ! Main parameters             dimension of the problem
+false                                                                  manipulate individual files (false by default, 1 restart file / process)
+false                                    ! Initialization              storing only the initial solution
+channel                                                                initialization (Diffusion, Bogey, Fu, Miller,Jet, DMR, Ambient)
+false restart  76                                                      reading a previous restart file (true/false), name, number
+0.0                                                                    initial simulation time
+false                                    ! Others                      perturbation (shear layers)
+false                                                                  filter
+3.0e-1   3.0815e-1                                                     filter_start, filter_end
+true  true                               ! Euler/Navier-Stokes         viscous problem (true=NS/false=Euler), viscous time step (true by defaulut if viscous problem)
+false                                    ! LES                         Large-Eddy Simuation
+WALE          0.10                                                     Viscosity SGS model (Smagorinsky 0.18, StructureFunction 1.4, WALE 0.18)
+false Yoshizawa   0.0066                                               Isotropic tensor SGS model (true/false, Yoshizawa 0.0066)
+10.0                                                                   weights density percent criteria for discontinuitie zones
+0.7                                                                    SGS Schmidt (0.7 to 1.0)
+0.7                                                                    SGS Prandtl (0.7 to 1.0) -> (0.3 to 0.9)
+false 1.0e-2                             ! Time steps                  fixed time step (true/false, value in seconde)
+0.1   0.5                                                              CFL (min,max<=0.9) convective
+true  1.0e-9                                                           minimum time step value (true/false, value) (recommand 1e-10 min)
+true  10.0                               ! Discontinuities             WENO nonlinear weights (true/false), density percent criteria (value)
+false 5                                                                WENO optimum weights (true/false), order (1, 3, 5)
+10                                       ! Others                      iterations to show information
+500                                                                    iterations frequency to store restart files
+10000                                     ! Stop calculating            walltime in minutes of calculation
+false 100                                                              iterations limit (true/false), maximum iterations
+0.5e-1                                                                 time to start recording stat files (seconde)
+0.5e-1                                                                 dt between stat files
+true  0                                                                store stat files (true/false), number of the last stat file
+1000                                                                   number of stats
+1.0                                                                    adimensional length for coordinates
+
+! Storing volume files (xmin, xmax, ymin, ymax, zmin, zmax coordinates)
+0.0 6.28 0.0 6.28 0.0 6.28
+
+! Storing stat files in XY-plane (Z-coordinates) 
+
+! Storing stat files in XZ-plane (Y-coordinates) 
+
+! Storing stat files in YZ-plane (X-coordinates) 
+
+! Probe coordinates (name, x, y, z) 
+
+ END
+
+
+BowS1          0.19765  0.002    0.0
+BowS2          0.1982   0.004    0.0
+BowS3          0.1991   0.006    0.0
+BowS4          0.2005   0.008    0.0
+BowS5          0.202    0.01     0.0
+ASL1           0.199    0.003    0.0
+ASL2           0.201    0.005    0.0
+ASL3           0.205    0.0065   0.0
+ASL4           0.211    0.007    0.0
+ASL5           0.219    0.0075   0.0
+BarrelS1       0.201    0.0035   0.0
+BarrelS2       0.2028   0.0037   0.0
+BarrelS3       0.2028   0.002    0.0
+BSL1           0.205    0.0035   0.0
+BSL2           0.21     0.004    0.0
+BSL3           0.215    0.0045   0.0
+BSL4           0.22     0.005    0.0
+BW1            0.23     0.003    0.0
+BW2            0.24     0.002    0.0
+BW3            0.25     0.001    0.0
+IW1            0.23     0.006    0.0
+IW2            0.24     0.007    0.0
+IW3            0.25     0.008    0.0
+URZ1           0.195    0.0005   0.0
+URZ2           0.198    0.0005   0.0
+HV1_zp         0.2      0.0005   0.002
+HV2_zp         0.205    0.0005   0.006
+HV3_zp         0.215    0.0005   0.01
+WPW1_zp        0.205    0.0005   0.0008
+WPW2_zp        0.21     0.0005   0.002
+WPW3_zp        0.22     0.0005   0.004
+WPW4_zp        0.23     0.0005   0.006
+WPW5_zp        0.24     0.0005   0.008
+WPW6_zp        0.25     0.0005   0.01
+HV1_zm         0.2      0.0005  -0.002
+HV2_zm         0.205    0.0005  -0.006
+HV3_zm         0.215    0.0005  -0.01
+WPW1_zm        0.205    0.0005  -0.0008
+WPW2_zm        0.21     0.0005  -0.002
+WPW3_zm        0.22     0.0005  -0.004
+WPW4_zm        0.23     0.0005  -0.006
+WPW5_zm        0.24     0.0005  -0.008
+WPW6_zm        0.25     0.0005  -0.01
+
+
+! Marinov Mechanism
+   1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0                                pure fuel composition (dvode/MIL, if simplify=true or to calculate: Detector_reaction, Zm, Deq)
+   0.0 0.2527 0.1631 0.5842 0.0 0.0 0.0 0.0 0.0 0.0                       pure oxydizer composition (idem)
+
+! Boivin Mechanism (3-step)
+   1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0                                pure fuel composition (dvode/MIL, if simplify=true or to calculate: Detector_reaction, Zm, Deq)
+   0.0 0.2527 0.1631 0.0 0.0 0.5842 0.0 0.0 0.0 0.0                       pure oxydizer composition (idem)
+
+! Boivin Mechanism (4-step)
+   1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0                                pure fuel composition (dvode/MIL, if simplify=true or to calculate: Detector_reaction, Zm, Deq)
+   0.0 0.2527 0.1631 0.0 0.0 0.0 0.5842 0.0 0.0 0.0                       pure oxydizer composition (idem)
+
+! Jachimovsky Mechanism
+   0.0 1.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0                                pure fuel composition (dvode/MIL, if simplify=true or to calculate: Detector_reaction, Zm, Deq)
+   0.0 0.0 0.0 0.2527 0.0 0.1631 0.0 0.0 0.5842 0.0                       pure oxydizer composition (idem)
+
+

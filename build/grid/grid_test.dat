@@ -1,0 +1,74 @@
+1                     number of processus in x-direction (0 if automatic) 
+1                     number of processus in y-direction (0 if automatic)
+1                     number of processus in z-direction (0 if automatic)
+
+extrapolation         -x boundary |choose: inner; extrapolation; noreflection; periodic;
+extrapolation         +x boundary |        symmetryplane; adiabaticwall; shock; postshock_slipwall;
+extrapolation         -y boundary |        inflowcheng; inflowmiller; inflowmixchengmiller;
+extrapolation         +y boundary |        inflowbogey; inflowjet; supersonicflow; wallinjection;
+extrapolation         -z boundary |        premixfix; nscbc_out; syntheticturb
+extrapolation         +z boundary |
+
+
+                           x-direction
+0.00000
+0.00040
+0.00080
+0.00120
+0.00160
+0.00200
+0.00240
+0.00280
+0.00320
+0.00360
+0.00400
+0.00440
+0.00480
+0.00520
+0.00560
+0.00600
+0.00640
+0.00680
+0.00720
+0.00760
+0.00800
+0.00840
+0.00880
+0.00920
+0.00960
+
+
+
+                           y-direction
+0.00000
+0.00040
+0.00080
+0.00120
+0.00160
+0.00200
+0.00240
+0.00280
+0.00320
+0.00360
+0.00400
+0.00440
+0.00480
+0.00520
+0.00560
+0.00600
+0.00640
+0.00680
+0.00720
+0.00760
+0.00800
+0.00840
+0.00880
+0.00920
+0.00960
+
+
+                           z-direction
+0.000000000000000E+000
+
+
+END
