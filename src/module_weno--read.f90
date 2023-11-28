@@ -217,8 +217,7 @@ contains
 
 
              write (*,*) 'not implemented in wenopar'
-             call mpi_abort ( MPI_COMM_WORLD , 1 , mpicode )
-
+             call disable_cuda()
 
           end if
 
@@ -230,7 +229,7 @@ contains
 
 
        write (*,*) 'not implemented in wenopar'
-       call mpi_abort ( MPI_COMM_WORLD , 1 , mpicode )
+       call disable_cuda()
 
 
     end if

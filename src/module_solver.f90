@@ -61,7 +61,7 @@ contains
                stat = ok )
 
 
-    if ( ok > 0 ) call abort_mpi ('error allocate read_restart')
+    if ( ok > 0 ) call end_cuda ('error allocate read_restart')
  
     v      = 0.0_dp
     T      = 0.0_dp
@@ -98,7 +98,7 @@ contains
                           status = 'old'           , &
                           iostat =  ok             )
 
-    if ( ok /= 0 .and. rank == rank_default ) call abort_mpi ('error opening ' // trim (adr_file))
+    if ( ok /= 0 .and. rank == rank_default ) call end_cuda ('error opening ' // trim (adr_file))
     call mpi_barrier ( MPI_COMM_WORLD , mpicode )
 
     read ( unit_restart , rec = rec_index ) & ! it must start at 1

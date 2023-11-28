@@ -16,22 +16,24 @@
 
 program WIND
 
-
-  use parameters
-  use input
-  use adim
-  use parallel
-  use weno
-  use deriv
-  use tools
-  use ICs
-  use solver
-  use cudafor
-  use cuda_parallel
+! module
+ 	use parameters
+  	use input
+  	use adim
+  	use parallel
+  	use weno
+  	use deriv
+  	use tools
+  	use ICs
+  	use solver
+  	use cudafor
+  	use cuda_parallel
   
 
   implicit none
 
+
+! variables
   type (inp_type)                                        :: inp
   type (adi_type)                                        :: adi
   type (inp_grid)                                        :: grid
@@ -55,63 +57,61 @@ program WIND
   character (len_default) , parameter                    :: format_times      = '(I8,1X,10(1X,1PE18.8))' ,&
                                                             format_times_head = '(A8,1X,10(1X,A18))'
 
-  
   tcomm = 0.0_dp
 
+
   
-  ! Check if the file_stop exists before
-  inquire ( file = trim (file_stop) , exist = existed )
-  if (existed) then
-     open  ( unit = unit_stop , file = trim (file_stop) )
-     close ( unit = unit_stop , status = "delete" )
-  end if
-  existed = .false.
 
-   ! MPI (Message Passing Interface : for parallel computing) initialisation
-!call init_mpi
-   ! replaced by CUDA
+! Check if the file_stop exists before
+   inquire ( file = trim (file_stop) , exist = existed )
+   if (existed) then
+      open  ( unit = unit_stop , file = trim (file_stop) )
+      close ( unit = unit_stop , status = "delete" )
+   	end if
+	existed = .false.
 
-   ! CUDA initialisation
+! CUDA initialization
    call initialize_cuda
 
-  ! CREAMS version and date
-  if ( rank == rank_default ) then
-     write (*,*)
-     write (*,*) '============================'
-     write (*,*) 'WIND v2.1.0'
-     write (*,*) 'DNS/LES compressible WENO Version'
-     call date_and_time ( values = valeurs )
-     print " (a ,2( i2 .2 , a ) , i4 ,a ,3( i2 .2 , a ) , a ) " , &
-              " " , valeurs (3) , "/" , valeurs (2) , "/" , valeurs (1) , & ! date
-              " " , valeurs (5) , ":" , valeurs (6) , ":" , valeurs (7)     ! time
-     write (*,*) '============================'
-     write (*,*)
-  end if 
+! CREAMS version and date 
+   write (*,*)
+   write (*,*) '============================'
+   write (*,*) 'WIND v2.1.0'
+   write (*,*) 'DNS/LES compressible WENO Version'
+   call date_and_time ( values = valeurs )
+   print " (a ,2( i2 .2 , a ) , i4 ,a ,3( i2 .2 , a ) , a ) " , &
+            " " , valeurs (3) , "/" , valeurs (2) , "/" , valeurs (1) , & ! date
+            " " , valeurs (5) , ":" , valeurs (6) , ":" , valeurs (7)     ! time
+   write (*,*) '============================'
+   write (*,*)
   
-  ! useful constants
+! useful constants
   call constants ( adi )
   !ok
-    
-  ! read file input.dat
+
+
+! read file input.dat
   call readinp ( adi , inp )
   ! maybe ok
+  ! the problem is that I can't tell the difference between compilers
+  ! ignore it temporary
 
-  ! read file grid.dat
+! read file grid.dat
   call readgrid ( adi , grid )
-  ! maybe ok
+  	! maybe ok
 
-  ! create MPI topology
-  call topology
-  ! may not needed,but I don't know how to do it in CUDA
+	! create MPI topology
+	!call topology
+   ! may not needed,but I don't know how to do it in CUDA
 
-  ! index for every subdomain
-  call subdomain
-  ! define sx,sy,sz,ex,ey,ez
-  ! allocated dynamically by MPI, corresponding to CUDA x/y/z thread
+	! index for every subdomain
+  	!call subdomain
+  	! define sx,sy,sz,ex,ey,ez
+  	! allocated dynamically by MPI, corresponding to CUDA x/y/z thread
   
-  ! looking for neighboors
-  call neighborhood
-  ! 
+  	! looking for neighboors
+  	!call neighborhood
+	! signification, but awkward in CUDA
 
   ! evaluation of the computational mesh and metrics
   call metrics ( grid % xt   , grid % yt   , grid % zt   , &
@@ -123,7 +123,8 @@ program WIND
   !call readinpext ( adi , grid , inp )
 
   ! create necessary repertories to save datas
-  if ( rank == rank_default ) call createrep (inp)
+  call createrep (inp)
+  ! ok except for rank_default
 
   ! creation of derivated types for communication
   call type_conserved
@@ -131,9 +132,11 @@ program WIND
      call type_derivative
      if (LES) call type_derivative_SGS
   end if
+  !need be completely modified
   
   ! definition of WENO parameters
   call wenopar ( inp % opt , inp % optord )
+  !maybe ok,have been modified
 
   ! prepare the stats
   if (inp % stat) then
@@ -148,19 +151,18 @@ program WIND
   call open_probes ( inp , adi , grid )
 
   ! opening the time files to store the iterations, time and dtmin
-  if ( rank == rank_default ) then
 
-     adr_file = trim (dir_parent) // trim (file_time_rest)
-     open ( unit = unit_time_rest , file = adr_file , status = 'new' , iostat = ok )
-     if ( ok /= 0 ) call abort_mpi ('ERROR opening ' // trim (adr_file))
-     close (unit_time_rest)
 
-     adr_file = trim (dir_parent) // trim (file_time_stat)
-     open ( unit = unit_time_stat , file = adr_file , status = 'new' , iostat = ok )
-     if ( ok /= 0 ) call abort_mpi ('ERROR opening ' // trim (adr_file))
-     close (unit_time_stat)
+   adr_file = trim (dir_parent) // trim (file_time_rest)
+   open ( unit = unit_time_rest , file = adr_file , status = 'new' , iostat = ok )
+   if ( ok /= 0 ) call end_cuda ('ERROR opening ' // trim (adr_file))
+   close (unit_time_rest)
 
-  end if
+   adr_file = trim (dir_parent) // trim (file_time_stat)
+   open ( unit = unit_time_stat , file = adr_file , status = 'new' , iostat = ok )
+   if ( ok /= 0 ) call end_cuda ('ERROR opening ' // trim (adr_file))
+   close (unit_time_stat)
+
 
   ! initializing some parameters
   if ( inp % read_restart ) then
@@ -189,13 +191,13 @@ program WIND
   if (inp % read_restart) then
      call read_restart ( inp , adi , time , grid , T , v )
   else
-     if ( rank == rank_default ) write (*,*) 'initializing the problem: ', trim (inp % init)
+     write (*,*) 'initializing the problem: ', trim (inp % init)
      call init_selector ( inp , adi , grid , T , v )
   end if
 
 
-  if ( rank == rank_default .and. loop ) write (*,*) 'entering the main loop ...'
-  if ( rank == rank_default .and. loop ) write (*,format_times_head) &
+  if ( loop ) write (*,*) 'entering the main loop ...'
+  if ( loop ) write (*,format_times_head) &
                                          'ite' , 'time' , 'dtmin' ,     &
                                          'dt_CFL*' , 'dt_mass_diff*' , 'dt_therm_diff*' , 'dt_chem*'
 
@@ -210,19 +212,16 @@ program WIND
 
   allocate ( mu_SGS ( sx-ng:ex+ng , sy-ng:ey+ng , sz-ng:ez+ng )        , & 
              stat = ok )
-  if ( ok > 0 ) call abort_mpi ('error allocate WIND.f90')
+  if ( ok > 0 ) call end_cuda ('error allocate WIND.f90')
   mu_SGS = 0.0_dp
 
   ! initial body force
 !   f_x = f_ini 
 
-  if (rank == rank_default) then
-  
-     open (unit=123,file='dudy.dat')
-     write(123,*)'variables= "time" , "du/dy" , "f_x"'
-     close(123)
+   open (unit=123,file='dudy.dat')
+   write(123,*)'variables= "time" , "du/dy" , "f_x"'
+   close(123)
 
-  end if
 
   ! main loop
   ite = 0
@@ -231,7 +230,7 @@ program WIND
      ite = ite + 1
      if ( inp % itlim .and. ite >= inp % itmax ) then
         loop = .false.
-        if ( rank == rank_default ) write (*,*) 'number of iterations has been reached'
+        write (*,*) 'number of iterations has been reached'
      end if
 
      ! random number evaluation every 1000 time steps
@@ -247,7 +246,7 @@ program WIND
         if (inp % stat) write_stat = .true.
         if ( nb_stat+1 >= inp % nstat ) then
            loop = .false.
-           if ( rank == rank_default ) write (*,*) 'number of stat files has been reached'
+           write (*,*) 'number of stat files has been reached'
         end if
      end if
 
@@ -276,8 +275,7 @@ program WIND
      ! storing stats when conditions satisfy
      if (write_stat) then
 
-        if ( rank == rank_default ) write ( * , format_times ) ite , &
-                                    time  , dtmin , dt_4 / dtmin
+        write ( * , format_times ) ite , time  , dtmin , dt_4 / dtmin
 
         ! write probes files
         call plot_probes ( time , dtmin , inp , adi , grid , v )
@@ -303,7 +301,7 @@ program WIND
    !      nb_restart = nb_restart + 1
    !      call save_restart ( nb_restart , time , dtmin , dt_4 , adi , v )
 
-   !      if ( rank == rank_default ) write (*,format_times_head) &
+   !      if ( device == device_default ) write (*,format_times_head) &
    !                                 'ite' , 'time' , 'dtmin' ,     &
    !                                 'dt_CFL*' , 'dt_mass_diff*' , 'dt_therm_diff*' , 'dt_chem*'
    !   end if
@@ -316,11 +314,10 @@ program WIND
 
 
      ! show information at the screen
-     if ( mod (ite,inp % itshow) == 0 .and. rank == rank_default ) then
+     if ( mod (ite,inp % itshow) == 0 .and. device == device_default ) then
         t_tmp1 = t_wall - t_tmp1
         t_tmp2 = time - t_tmp2
-        if ( rank == rank_default ) write ( * , format_times ) ite , time , dtmin , &
-                                                               dt_4 / dtmin
+        write ( * , format_times ) ite , time , dtmin , dt_4 / dtmin
         call counter ( time / inp % timing (inp % nstat) ,   &
                        t_tmp2 / inp % timing (inp % nstat) , &
                        t_tmp1 , tcomm , t_wall-t_in_loop )
@@ -334,13 +331,13 @@ program WIND
 !     if ( ( t_wall - t_in_loop ) > 0.95_dp * (inp % walltime) ) then
      if ( ( t_wall - t_in_loop ) > inp % walltime ) then
         loop = .false.
-        if ( rank == rank_default ) write (*,*) 'walltime has been reached'
+        write (*,*) 'walltime has been reached'
      end if
      if ( mod (ite,20) == 0 ) then
         inquire ( file = trim ( file_stop ) , exist = existed )
         if (existed) then
            loop = .false.
-           if ( rank == rank_default ) write (*,*) 'request to stop the program'
+           write (*,*) 'request to stop the program'
         end if
      end if
 
@@ -348,7 +345,7 @@ program WIND
      if (existed) then
         open ( unit = unit_inp , file = 'CFL.inp' )
            read ( unit_inp , * ) inp % CFL
-           if ( rank == rank_default ) write (*,*) 'WARNING: Change CFL value ' , CFL , ' to ' , inp % CFL
+           write (*,*) 'WARNING: Change CFL value ' , CFL , ' to ' , inp % CFL
            CFL = inp % CFL
         call mpi_barrier ( MPI_COMM_WORLD , mpicode ) ! Wait all procs before to close and delete file
         close ( unit = unit_inp , status = "delete" )
@@ -359,7 +356,7 @@ program WIND
   end do ! main loop
 
 
-  if ( rank == rank_default .and. .not. loop ) write (*,*) 'exit the main loop ...'
+  if ( .not. loop ) write (*,*) 'exit the main loop ...'
 
 
   ! measure the loop time
@@ -381,14 +378,13 @@ program WIND
 !  close (unit_time_stat)
 
 
-  if ( rank == rank_default ) then
-     t_out_loop = t_out_loop - t_in_loop
-     t_in_loop  = 100.0_dp * ( 1.0_dp - t_par / t_out_loop )
-     write (*,*) 'program finished in ' , t_out_loop / 60.0_dp , ' minutes'
-     write (*,*) 'communications time was ' , t_par / 60.0_dp , ' minutes'
-     write (*,*) 'average parallel efficiency of ' , t_in_loop , '%'
-     write (*,*)
-  end if
+   t_out_loop = t_out_loop - t_in_loop
+   t_in_loop  = 100.0_dp * ( 1.0_dp - t_par / t_out_loop )
+   write (*,*) 'program finished in ' , t_out_loop / 60.0_dp , ' minutes'
+   write (*,*) 'communications time was ' , t_par / 60.0_dp , ' minutes'
+   write (*,*) 'average parallel efficiency of ' , t_in_loop , '%'
+   write (*,*)
+
 
   deallocate ( v , T , mu_SGS ) ! deallocate initialized variables
 

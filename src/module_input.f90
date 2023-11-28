@@ -8,6 +8,7 @@ module input
   use parameters
   use parallel
   use adim
+  use cuda_parallel
 
 
   implicit none
@@ -230,7 +231,7 @@ contains
 
 
     open ( unit_grid , file = file_grid , status = 'old' , action = 'read' , iostat = ok )
-    if ( ok /= 0 ) call abort_cuda ( 'error opening ' // trim (file_grid) )
+    if ( ok /= 0 ) call end_cuda ( 'error opening ' // trim (file_grid) )
 
     read (unit_grid,*) ! number of processus in x-direction (0 if automatic)
     read (unit_grid,*) ! number of processus in y-direction (0 if automatic)
@@ -277,7 +278,7 @@ contains
     ntz = k
 
     if (ndir /= 3) &
-       call abort_cuda ( 'Missing direction in grid.dat : ndir = ' // trim(str(ndir)) )
+       call end_cuda ( 'Missing direction in grid.dat : ndir = ' // trim(str(ndir)) )
 
 
     ! go back up to the file
@@ -288,7 +289,7 @@ contains
                grid % yt (1-ng:nty+ng) , &
                grid % zt (1-ng:ntz+ng) , &
                stat = ok )
-    if ( ok > 0 ) call abort_cuda ('error allocate readgrid')
+    if ( ok > 0 ) call end_cuda ('error allocate readgrid')
 
     grid % xt = 0.0_dp
     grid % yt = 0.0_dp
@@ -303,25 +304,25 @@ contains
     end do
 
     read (unit_grid,*) word
-    if (word /= 'x-direction') call abort_cuda ('error: key word ''x-direction'' is missing')
+    if (word /= 'x-direction') call end_cuda ('error: key word ''x-direction'' is missing')
     do i = 1 , ntx
        read (unit_grid,*) grid % xt(i)
     end do
 
     read (unit_grid,*) word
-    if (word /= 'y-direction') call abort_cuda ('error: key word ''y-direction'' is missing')
+    if (word /= 'y-direction') call end_cuda ('error: key word ''y-direction'' is missing')
     do j = 1 , nty
        read (unit_grid,*) grid % yt(j)
     end do
 
     read (unit_grid,*) word
-    if (word /= 'z-direction') call abort_cuda ('error: key word ''z-direction'' is missing')
+    if (word /= 'z-direction') call end_cuda ('error: key word ''z-direction'' is missing')
     do k = 1 , ntz
        read (unit_grid,*) grid % zt(k)
     end do
 
     read (unit_grid,*) word
-    if (word /= 'END') call abort_cuda ('error: key word ''END'' is missing')
+    if (word /= 'END') call end_cuda ('error: key word ''END'' is missing')
 
     close (unit_grid)
 
@@ -332,7 +333,6 @@ contains
 
 
     ! Display the points boundaries
-    if ( rank == rank_default ) then
        write (*,*)
        ! write (*,format_exit1) 'MPI processes = ' , nproc
        write (*,format_exit1) 'Topology:    nx  = ' , dims(3) , ', ny  = ' , dims(2) , ', nz  = ' , dims(1)
@@ -342,13 +342,13 @@ contains
        write (*,format_exit2) 'ymin , ymax = ' , grid % yt (1) , grid % yt (nty)
        write (*,format_exit2) 'zmin , zmax = ' , grid % zt (1) , grid % zt (ntz)
        write (*,*)
-    end if
+   
 
 
     ! Checking for periodic boundary conditions
     do i = 1 , 5 , 2
        if ( bc (i) == periodic .and. bc(i+1) /= bc(i) ) &
-          call abort_cuda ('boundary conditions must appear in pairs')
+          call end_cuda ('boundary conditions must appear in pairs')
     end do
 
     period(:) = .false.
@@ -395,7 +395,7 @@ contains
    #endif
 
     open ( unit = unit_inp , file = file_inp , status = 'old' , action = 'read' , iostat = ok )
-    if ( ok /= 0 ) call abort_cuda ('error opening ' // trim (file_inp))
+    if ( ok /= 0 ) call end_cuda ('error opening ' // trim (file_inp))
 
 
     read ( unit_inp , * ) inp % dim                            !dimension of the problem
@@ -434,7 +434,7 @@ contains
 
     inp % nvolume = 0 ; l = 1
     do
-       if ( inp % nvolume > nplanemax ) call abort_cuda ('maximum number of volumes reached')
+       if ( inp % nvolume > nplanemax ) call end_cuda ('maximum number of volumes reached')
        read ( unit_inp , * , iostat = ok ) inp % x_volmin (l) , inp % x_volmax (l) , &
                                            inp % y_volmin (l) , inp % y_volmax (l) , &
                                            inp % z_volmin (l) , inp % z_volmax (l)
@@ -445,7 +445,7 @@ contains
 
     inp % nxystat = 0 ; l = 1
     do
-       if ( inp % nxystat > nplanemax ) call abort_cuda ('maximum number of XY-planes reached')
+       if ( inp % nxystat > nplanemax ) call end_cuda ('maximum number of XY-planes reached')
        read ( unit_inp , * , iostat = ok ) inp % z_xystat (l)
        if ( ok /=0 ) exit  ! Storing stat files in XZ-plane (Y-coordinates)
        inp % nxystat = inp % nxystat + 1
@@ -454,7 +454,7 @@ contains
 
     inp % nxzstat = 0 ; l = 1
     do
-       if ( inp % nxzstat > nplanemax ) call abort_cuda ('maximum number of XZ-planes reached')
+       if ( inp % nxzstat > nplanemax ) call end_cuda ('maximum number of XZ-planes reached')
        read ( unit_inp , * , iostat = ok ) inp % y_xzstat (l)
        if ( ok /=0 ) exit  ! Storing stat files in YZ-plane (X-coordinates)
        inp % nxzstat = inp % nxzstat + 1
@@ -463,7 +463,7 @@ contains
 
     inp % nyzstat = 0 ; l = 1
     do
-       if ( inp % nyzstat > nplanemax ) call abort_cuda ('maximum number of YZ-planes reached')
+       if ( inp % nyzstat > nplanemax ) call end_cuda ('maximum number of YZ-planes reached')
        read ( unit_inp , * , iostat = ok ) inp % x_yzstat (l)
        if ( ok /=0 ) exit  ! Probe coordinates (name,x,y,z)
        inp % nyzstat = inp % nyzstat + 1
@@ -476,7 +476,7 @@ contains
     inp % probe_coord = 0.0_dp
     do while (loop)
 
-       if ( inp % nprobes > nprobesmax ) call abort_cuda ('maximum number of probes reached')
+       if ( inp % nprobes > nprobesmax ) call end_cuda ('maximum number of probes reached')
        read ( unit_inp , * ) inp % probe_name (ind)
 
        if ( inp % probe_name (ind) == 'END' ) then
@@ -505,13 +505,13 @@ contains
          ( inp % nvolume == 0 .and. inp % nxystat == 0 .and. inp % nxzstat == 0 .and. inp % nyzstat == 0 ) ) then
        write (*,*) 'error: you try to save statistic files (volumes or planes) for 3D simulation without defining volumes or planes'
        write (*,*) 'please reconsider this parameter'
-       call finalize_cuda()
+       call disable_cuda()
     end if
 
     if ( inp % tau_iso_SGS_switch .and. ( .not. inp % LES ) ) then
        write (*,*) 'error: input.dat -> calculate SGS isotropic tensor without activate LES'
        write (*,*) 'please reconsider this parameter'
-       call finalize_cuda()
+       call disable_cuda()
     end if
 
     nderiv = inp % dim * ( inp % dim + 1 )
@@ -542,7 +542,7 @@ contains
 
     inp % walltime = inp % walltime * 60 ! minutes -> seconds
 
-    if ( inp % nstat > nstatmax ) call abort_cuda ('maximum number of statistics reached')
+    if ( inp % nstat > nstatmax ) call end_cuda ('maximum number of statistics reached')
 
     if ( inp % read_restart ) then
        inp % timing (1:inp % number_stat+1) = inp % time_offset
@@ -560,7 +560,7 @@ contains
     allocate ( duidxj  ( ndim , ndim )             , &
                kdelta  ( ndim , ndim )             , &
                stat = ok )
-    if ( ok > 0 ) call abort_cuda ('error allocate input')
+    if ( ok > 0 ) call end_cuda ('error allocate input')
     kdelta = 0.0_dp
     do l = 1 , ndim
        kdelta (l,l) = 1.0_dp

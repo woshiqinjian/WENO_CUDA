@@ -83,7 +83,7 @@ contains
     ! else if ( inp % init == Detonation ) then ! Detonation
     !    call ini_detonation ( inp , adi , thd , grid % x , grid % y , grid % z , T , W_i , cp , ha , v )
     else
-       call abort_mpi ('initalization ' // trim (inp % init) // ' not defined')
+       call end_cuda ('initalization ' // trim (inp % init) // ' not defined')
     end if
 
 

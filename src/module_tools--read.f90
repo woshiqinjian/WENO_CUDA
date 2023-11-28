@@ -520,7 +520,7 @@ contains
     if ( rank == rank_default ) then
        adr_file = trim (dir_parent) // trim (file_time_rest)
        open ( unit_time_rest , file = adr_file , status = 'old' , position = 'append' , iostat = ok )
-       if ( ok /= 0 ) call abort_mpi ('ERROR opening ' // trim (adr_file))
+       if ( ok /= 0 ) call end_cuda ('ERROR opening ' // trim (adr_file))
        write ( unit_time_rest , format_exit ) number , time , dtime , dt_4 / dtime
        close ( unit_time_rest )
     end if
@@ -557,7 +557,7 @@ contains
                           status = 'unknown'       , &
                           iostat = ok              )
 
-    if ( ok /= 0 ) call abort_mpi ('error opening ' // trim (adr_file))
+    if ( ok /= 0 ) call end_cuda ('error opening ' // trim (adr_file))
 
     write ( unit_restart , rec = rec_index )&
          (((( v (i,j,k,l) , i = sx , ex ) , &
@@ -636,7 +636,7 @@ contains
        else
 
           write (*,*) rank , 'there is a problem with volumes in x-direction'
-          call mpi_abort ( MPI_COMM_WORLD , 1 , mpicode )
+          call disable_cuda()
 
        end if
 
@@ -667,7 +667,7 @@ contains
        else
 
           write (*,*) rank , 'there is a problem with volumes in y-direction'
-          call mpi_abort ( MPI_COMM_WORLD , 1 , mpicode )
+          call end_cuda()
 
        end if
 
@@ -698,7 +698,7 @@ contains
        else
 
           write (*,*) rank , 'there is a problem with volumes in z-direction'
-          call mpi_abort ( MPI_COMM_WORLD , 1 , mpicode )
+          call end_cuda()
 
        end if
 
@@ -1413,7 +1413,7 @@ contains
                  form   = 'formatted'     , &
                  status = 'unknown'       , &
                  iostat = ok )
-          if ( ok /= 0 ) call abort_mpi ('error opening ' // trim (adr_file))
+          if ( ok /= 0 ) call end_cuda ('error opening ' // trim (adr_file))
 
           ! calculate points
           do i = ex , sx , -1
@@ -1549,7 +1549,7 @@ contains
                  status = 'old'           , &
                  position = 'append'      , &
                  iostat = ok )
-          if ( ok /= 0 ) call abort_mpi ('error opening ' // trim (adr_file))
+          if ( ok /= 0 ) call end_cuda ('error opening ' // trim (adr_file))
 
           write ( currunit , format ) time  ,  &
                                       dtime , &
@@ -2048,7 +2048,7 @@ contains
  #define _DIR_ file    
  #endif
 
-    if ( ok > 0 ) call abort_mpi ('error allocate tec_post')
+    if ( ok > 0 ) call end_cuda ('error allocate tec_post')
     
     nidex = ntx * nty * ntz * nv
     
@@ -2069,6 +2069,7 @@ contains
     end do
     
     call mpi_allReduce ( v_i , v_ii , nidex , MPI_DOUBLE_PRECISION , MPI_SUM , MPI_COMM_WORLD , mpicode )
+    ! 规约：将所有进程的v_i加起来，放到v_ii中
     
     if (rank == rank_default) then 
 

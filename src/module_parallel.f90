@@ -4,7 +4,7 @@
 module parallel
 
   use parameters
-
+  use cudafor
 !  use MPI
 
   implicit none
@@ -377,17 +377,22 @@ contains
       ! replaced by CUDA
     sx = ( coords(3)*ntx ) / dims(3) + 1
     ex = ( ( coords(3)+1 )*ntx ) / dims(3)
+   !explain:ntx if the total number of cells in x direction, dims(3) is the number of threads in x direction,coords(3) is the x direction coordiation of the current block.that means that
+   !one cell owns more than one coordiation in x direction.
+   !it seems easy to translate the code to CUDA,  but it is not easy to understand the code.
 
     sy = ( coords(2)*nty ) / dims(2) + 1
     ey = ( ( coords(2)+1 )*nty ) / dims(2)
 
     sz = ( coords(1)*ntz ) / dims(1) + 1
     ez = ( ( coords(1)+1 )*ntz ) / dims(1)
+   ! may need to change the method to get coords()
+
 
     nxmax = ceiling ( 1.0_dp * ntx / dims (3) )
     nymax = ceiling ( 1.0_dp * nty / dims (2) )
     nzmax = ceiling ( 1.0_dp * ntz / dims (1) )
-
+   ! useful, reservation
 
   end subroutine subdomain
 
@@ -403,6 +408,7 @@ contains
     call MPI_CART_SHIFT ( comm3d , 2 , 1 , neigh(W) , neigh(E) , mpicode )
     call MPI_CART_SHIFT ( comm3d , 1 , 1 , neigh(S) , neigh(N) , mpicode )
     call MPI_CART_SHIFT ( comm3d , 0 , 1 , neigh(B) , neigh(F) , mpicode )
+    ! get the neighbours in the cartesian topology
 
     ! looking for diagonal neighboors
 
@@ -412,6 +418,7 @@ contains
     if ( ( dcoords(2) <= dims(2)-1 ) .and. ( dcoords(3) <= dims(3)-1 ) ) then
        call MPI_CART_RANK ( comm3d , dcoords , neighdxy (1) , mpicode )
     end if
+    !get the first nighbourhood's rank in the diagonal direction
     ! diagonal 2
     dcoords = (/ coords(1) , coords(2)-1 , coords(3)+1 /) ! (/ zdirection , ydirection, xdirection /)
     if ( ( dcoords(2) >= 0 ) .and. ( dcoords(3) <= dims(3)-1 ) ) then
@@ -498,7 +505,7 @@ contains
        if ( neigh (B) /= MPI_PROC_NULL ) bc (B) = inner
        if ( neigh (F) /= MPI_PROC_NULL ) bc (F) = inner
     end if
-
+! mark the boundary conditions for each process
 
   end subroutine neighborhood
 

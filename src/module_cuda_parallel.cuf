@@ -3,6 +3,17 @@ module cuda_parallel
     use cudafor
 
     implicit none
+    integer ( kind (0) ) , parameter   ::   dp = kind ( 0.0d0 ) , & !< double precision
+                                            sp = kind ( 0.0   ) , & !< simple precision
+                                            ip = kind ( 0     )     !< integer precision
+    integer (ip)                                  :: device !< device
+    integer (ip) , parameter :: device_default = 0  !< default device number
+
+    interface end_cuda
+        module procedure end_cuda
+        module procedure abort_cuda
+    end interface end_cuda
+
 
     contains
 
@@ -15,54 +26,46 @@ module cuda_parallel
         if (error_code /=cudaSuccess) then
             error_string=cudaGetErrorString (code_statue)
             print *, "CUDA ERROR: "
-            print *, "      File:          " , __FILE__
-            print *, "      Line:          " , __LINE__
-            print *,"       Error Code:    " , trim(error_code)
-            print *, "      Error Text:    " , trim(error_string)
+            print *, "      File:               " , __FILE__
+            print *, "      Line:               " , __LINE__
+            print *, "      Error Code:         " , trim(error_code)
+            print *, "      Error Text:         " , trim(error_string)
             stop
         end if
     
     end subroutine check
     
 !> cuda initialization subroutine
-    subroutine initialize_cuda
+    subroutine initialize_cuda()
 
-        integer :: device_count, device, ierr
-
+        integer :: device_count
         ! Get the number of CUDA devices
-        ierr=cudaGetDeviceCount(device_count)
-        call check(ierr)
+        call check(cudaGetDeviceCount(device_count))
 
         ! Loop over devices and set the first one that is available
-        do device = 0, device_count - 1
-            ierr = cudaSetDevice(device)
-            if (ierr == cudaSuccess) then
-                exit
-            else 
-                call check(ierr)
-            end if
-        end do
+        call check(cudaSetDevice(device_count))
+        device = device_count
+
     end subroutine initialize_cuda
  
-!> cuda finalization subroutine
-    subroutine finalize_cuda
+!> cuda abort subroutine, not need message
+    subroutine end_cuda
 
-        integer :: ierr
+        call check(cudaDeviceReset())
 
-        ierr = cudaDeviceReset()
-        call check(ierr)
+    end subroutine disable_cuda
 
-    end subroutine finalize_cuda
-
-!> cuda abort subroutine
+!> cuda abort subroutine, need message
     subroutine abort_cuda(Message)
 
         character(len=*), intent(in) :: Message
 
         print *, Message
-        call finalize_cuda()
+        call end_cuda()
         stop
 
     end subroutine abort_cuda
 
-end module cuda_initialization  
+!> cuda memory allocation subroutine
+
+end module cuda_parallel  
