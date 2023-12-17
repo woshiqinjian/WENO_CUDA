@@ -113,7 +113,7 @@ program WIND
   	!call neighborhood
 	! signification, but awkward in CUDA
 
-  ! evaluation of the computational mesh and metrics
+! evaluation of the computational mesh and metrics
   call metrics ( grid % xt   , grid % yt   , grid % zt   , &
                  grid % x    , grid % y    , grid % z    , &
                  grid % dx_i , grid % dy_i , grid % dz_i , &
@@ -122,11 +122,11 @@ program WIND
   ! read external input data from the file syntturb.dat
   !call readinpext ( adi , grid , inp )
 
-  ! create necessary repertories to save datas
+! create necessary repertories to save datas
   call createrep (inp)
   ! ok except for rank_default
 
-  ! creation of derivated types for communication
+! creation of derivated types for communication
   call type_conserved
   if (vis) then
      call type_derivative
